@@ -14,7 +14,7 @@
 #
 # As per the GPL, removal of this notice is prohibited.
 
-#THIS CODE has been hacked too many times to move it between versions of TWiki
+#THIS CODE has been hacked too many times to move it between versions of TWiki (yes, TWiki)
 #I still have to clean the code up alot. Sven Nov 2007
 
 =begin twiki
@@ -49,7 +49,7 @@ use Error qw( :try );
 ---++ ClassMethod new( $session ) -> $object
 
 Constructs a new password handler of this type, referring to $session
-for any required TWiki services.
+for any required Foswiki services.
 
 =cut
 
@@ -552,7 +552,7 @@ sub getEmails {
 
 ---++ ObjectMethod setEmails($user, @emails)
 
-Joomla manages all user info, TWiki does not 'set'
+Joomla manages all user info, Foswiki does not 'set'
 
 =cut
 
@@ -839,7 +839,7 @@ sub _cacheUser {
     return $user;
 }
 
-# PRIVATE get a list of groups defined in this TWiki
+# PRIVATE get a list of groups defined in this Foswiki
 sub _getListOfGroups {
     my $this = shift;
     ASSERT( ref($this) eq 'Foswiki::Users::JoomlaUserMapping' ) if DEBUG;

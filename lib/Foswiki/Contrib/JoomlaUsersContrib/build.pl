@@ -2,7 +2,7 @@
 use strict;
 
 # Standard preamble
-BEGIN { unshift @INC, split( /:/, $ENV{TWIKI_LIBS} ) }
+BEGIN { unshift @INC, split( /:/, $ENV{FOSWIKI_LIBS} ) }
 
 use Foswiki::Contrib::Build;
 
