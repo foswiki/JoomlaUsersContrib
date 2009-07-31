@@ -13,6 +13,9 @@
 # **STRING 25**
 # The DSN to connect to the Joomla Database.
 $Foswiki::cfg{Plugins}{JoomlaUser}{DBI_dsn} = 'dbi:mysql:joomla_db:localhost';
+# **BOOLEAN**
+# using Joomla Version 1.5 (else treats the database as joomla 1.3)
+$Foswiki::cfg{Plugins}{JoomlaUser}{JoomlaVersionOnePointFive} = $TRUE;
 # **STRING 25**
 # The user to connect to the Joomla Database.
 $Foswiki::cfg{Plugins}{JoomlaUser}{DBI_username} = 'mysqlpassword';

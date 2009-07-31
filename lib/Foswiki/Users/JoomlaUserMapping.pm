@@ -58,6 +58,8 @@ sub new {
     my $this =
       bless( $class->SUPER::new( $session, 'JoomlaUserMapping_' ), $class );
     $this->{mapping_id} = 'JoomlaUserMapping_';
+    
+    $this->{JoomlaOnePointFive} = $Foswiki::cfg{Plugins}{JoomlaUser}{JoomlaVersionOnePointFive};
 
     $this->{error} = undef;
     require Digest::MD5;
@@ -321,31 +323,40 @@ sub eachGroupMember {
     ASSERT( $this->isa('Foswiki::Users::JoomlaUserMapping') ) if DEBUG;
     ASSERT( defined($groupName) ) if DEBUG;
 
-    #    my $store = $this->{session}->{store};
-    #    my $users = $this->{session}->{users};
-
     return new Foswiki::ListIterator( $this->{groupCache}{$groupName} )
       if ( defined( $this->{groupCache}{$groupName} ) );
 
     my $members = [];
 
 #return [] if ($groupName =~ /Registered/);    #LIMIT it cos most users are resistered
+
+    my $idRowName = 'group_id';
+    if ($this->{JoomlaOnePointFive}) {
+        $idRowName = 'id';
+    }
+    my $groupSelectStatement = 'select '.$idRowName.' from jos_core_acl_aro_groups where name = ?';
+
     my $groupIdDataSet = $this->dbSelect(
-        'select group_id from jos_core_acl_aro_groups where name = ?',
+        $groupSelectStatement,
         $groupName );
     if ( exists $$groupIdDataSet[0] ) {
-        my $group        = $$groupIdDataSet[0]{group_id};
+        my $group        = $$groupIdDataSet[0]{$idRowName};
         my $groupDataset = $this->dbSelect(
             'select aro_id from jos_core_acl_groups_aro_map where group_id = ?',
             $group
         );
+
+        my $userSelectStatement = 'select value from jos_core_acl_aro where aro_id = ?';
+        if ($this->{JoomlaOnePointFive}) {
+            $userSelectStatement = 'select value from jos_core_acl_aro where id = ?';
+        }
 
         #TODO: re-write with join & map
         for my $row (@$groupDataset) {
 
             #get rows of users in group
             my $userDataset = $this->dbSelect(
-                'select value from jos_core_acl_aro where aro_id = ?',
+                $userSelectStatement,
                 $$row{aro_id} );
             my $user_id =
               $this->{mapping_id} . $$userDataset[0]{value};    # user_id
@@ -371,9 +382,11 @@ Subclasses *must* implement this method.
 sub isGroup {
     my ( $this, $user ) = @_;
 
-    #throw Error::Simple('IMPLEMENT/TEST ME');
-    my $groupIdDataSet = $this->dbSelect(
-        'select group_id from jos_core_acl_aro_groups where name = ?', $user );
+    my $groupSelectStatement = 'select group_id from jos_core_acl_aro_groups where name = ?';
+    if ($this->{JoomlaOnePointFive}) {
+        $groupSelectStatement = 'select id from jos_core_acl_aro_groups where name = ?';
+    }
+    my $groupIdDataSet = $this->dbSelect($groupSelectStatement, $user );
     if ( exists $$groupIdDataSet[0] ) {
 
         #print STDERR "$user is a GROUP\n";
@@ -717,14 +730,14 @@ sub getJoomlaDB {
 
     unless ( defined( $this->{JoomlaDB} ) ) {
 
-#        $this->{session}->writeWarning("DBIx::SQLEngine->new( $dbi_dsn, $dbi_user, ...)");
+#        Foswiki::Func::writeWarning("DBIx::SQLEngine->new( $dbi_dsn, $dbi_user, ...)");
         try {
             $this->{JoomlaDB} =
               DBIx::SQLEngine->new( $dbi_dsn, $dbi_user, $dbi_passwd );
         }
         catch Error::Simple with {
             $this->{error} = $!;
-            $this->{session}->writeWarning(
+            Foswiki::Func::writeWarning(
                 "ERROR: DBIx::SQLEngine->new( $dbi_dsn, $dbi_user, ...) : $!");
             #die 'MYSQL login error (' . $dbi_dsn . ', ' . $dbi_user . ') ' . $!;
         };
@@ -741,7 +754,7 @@ sub dbSelect {
 
     #print STDERR "fetch_select( @query )";
 
-    #    $this->{session}->writeWarning("fetch_select( @query )");
+    #    Foswiki::Func::writeWarning("fetch_select( @query )");
     if (@query) {
         try {
             my $db = $this->getJoomlaDB();
@@ -750,11 +763,11 @@ sub dbSelect {
         catch Error::Simple with {
             $this->{error} = $!;
             print STDERR "            ERROR: fetch_select(@query) : $!";
-            $this->{session}->writeWarning("ERROR: fetch_select(@query) : $!");
+            Foswiki::Func::writeWarning("ERROR: fetch_select(@query) : $!");
         };
     }
 
-    #    $this->{session}->writeWarning("fetch_select => ".@$dataset);
+    #    Foswiki::Func::writeWarning("fetch_select => ".@$dataset);
     return $dataset;
 }
 
@@ -881,14 +894,14 @@ sub lookupLoginName {
 sub fetchPass {
     my ( $this, $user ) = @_;
     ASSERT( $this->isa('Foswiki::Users::JoomlaUserMapping') ) if DEBUG;
-    print STDERR "fetchPass($user)\n";
+    #print STDERR "fetchPass($user)\n";
 
     if ($user) {
         my $dataset =
           $this->dbSelect( 'select * from jos_users where username = ?',
             $user );
 
-      #$this->{session}->writeWarning("$@$dataset");
+      #Foswiki::Func::writeWarning("$@$dataset");
       #print STDERR "fetchpass got - ".join(', ', keys(%{$$dataset[0]}))."\n";
       #print STDERR "fetchpass got - ".join(', ', values(%{$$dataset[0]}))."\n";
         if ( exists $$dataset[0] ) {
