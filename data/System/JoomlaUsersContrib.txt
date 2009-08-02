@@ -3,7 +3,7 @@
 
 ---+!! JoomlaUsersContrib Contrib Package
 
-*tested with Joomla 1.0.13*
+*tested with Joomla 1.0.13 and 1.5*
 
 
 This Contrib enables you to replace the Foswiki User and Groups system with a read only access to the 
@@ -16,7 +16,7 @@ otherwise user query performance (happens every request) will severely degrade t
 *NOTE:* for performance reasons, the Joomla Registered Users group is _not_ brought into the system, 
 The other groups may cause performance degradation if they have too many members
 
-By selecting JoomlaLogin, Foswiki will also attempt to use the Joomla 'remember me' cookie -
+By selecting JoomlaLogin, Foswiki will also attempt (has worked on joomla 1.3, but not reliably) to use the Joomla 'remember me' cookie -
  though this requires the Foswiki and Joomla host names to be the same.
 
 <a href="http://wikiring.com/" ><img src="%ATTACHURL%/wikiringlogo.png" style="float: right; padding:30px;" /></a>
@@ -33,35 +33,28 @@ Settings are in =lib/LocalSite.cfg=. the Foswiki configure script does not curre
       * Set STUB = authenticate using the joomla users - disable registration.
 
 ---++ Installation Instructions
-	* Download the ZIP file from the Plugin web (see below)
-	* Unzip ==%TOPIC%.zip== in your foswiki installation directory. Content:
-	| *File:* | *Description:* |
-
-	* Run ==%TOPIC%_installer.pl== to automatically check and install other modules that this module depends on. You can also do this step manually. Dependencies:
-	<table border="1"><tr><th>Name</th><th>Version</th><th>Description</th></tr><tr><td align="left">DBIx::SQLEngine</td><td align="left"> &gt;=0.93</td><td align="left">(and its pre-requisites) Extends DBI with High-Level Operations</td></tr><tr><td align="left">DBD::mysql</td><td align="left"> &gt;=3.0000</td><td align="left">(and its pre-requisites) MySQL driver for the Perl5 Database Interface (DBI)</td></tr></table>
+%$INSTALL_INSTRUCTIONS%
    * set Foswiki::Users::JoomlaUserMapping as your UserMapping in configure's Security section
    * set Foswiki::LoginManager::JoomlaLogin as your LoginManager in configure's Security section
    * set none as your PasswordManager in configure's Security section
    * set the ={AdminGroup}= in the configure security section to one of the Joomla groups (such as =Super Administrator=)
    * configure  JoomlaUsersContrib from the *User Managers* / *Joomla User Manager* section in configure
       * this needs a dbi connection string to your Joomla database, and a valid username and password for it.
-   * Test if the installation was successful:
-      * __enter sample here__
-      * see also [[Sandbox.PluginTest%TOPIC%]]
 
 ---++ Contrib Info
 
 |  Plugin Author: | Foswiki:Main.SvenDowideit - of [[http://fosiki.com][fosiki.com]] - <img src="%ATTACHURL%/wikiring.png" /> [[http://www.wikiring.com][WikiRing.com]] |
 |  Copyright: | &copy; 2006-2009, SvenDowideit@fosiki.com |
-|  License: | GPL ([[http://www.gnu.org/copyleft/gpl.html][GNU General Public License]]) |
-|  Dependencies: | <table border="1"><tr><th>Name</th><th>Version</th><th>Description</th></tr><tr><td align="left">DBIx::SQLEngine</td><td align="left"> &gt;=0.93</td><td align="left">(and its pre-requisites) Extends DBI with High-Level Operations</td></tr><tr><td align="left">DBD::mysql</td><td align="left"> &gt;=3.0000</td><td align="left">(and its pre-requisites) MySQL driver for the Perl5 Database Interface (DBI)</td></tr></table> |
-|  Version: | 138 |
+|  License: | GPL 3 ([[http://www.gnu.org/copyleft/gpl.html][GNU General Public License]]) |
+|  Dependencies: | %$DEPENDENCIES% |
+|  Version: | %$VERSION%  |
 |  Change History: | <!-- versions below in reverse order -->&nbsp; |
+| 1 Aug 2009 | update to work with Joomla 1.3 _and_ 1.5, migrate to the more modern Foswiki:Extensions.DbiContrib |
 | Mar 2009 | port to Foswiki |
 | Sep 2008 | updated to 4.2.1 mapping, and fixed for Joomla 1.0.13 - where the password salts were changed |
 | Nov 2007 | updated to TWiki 4.2, and released |
-|  2006 | Initial version (not public) |
-|  Home: | http://foswiki.org/Extensions/%TOPIC% |
+| 2006 | Initial version (not public) |
+| Home: | http://foswiki.org/Extensions/%TOPIC% |
 
 
 -- SvenDowideit@fosiki.com 

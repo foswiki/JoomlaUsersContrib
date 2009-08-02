@@ -14,16 +14,12 @@
 #
 # As per the GPL, removal of this notice is prohibited.
 
-#THIS CODE has been hacked too many times to move it between versions of TWiki (yes, TWiki)
-#I still have to clean the code up alot. Sven Nov 2007
-
-=begin twiki
+=begin pod
 
 ---+ package Foswiki::Users::JoomlaUserMapping
 
 canonical user_id == id number of jos_user table
 login == username column
-
 
 =cut
 
@@ -31,14 +27,12 @@ package Foswiki::Users::JoomlaUserMapping;
 use base 'Foswiki::UserMapping';
 
 use strict;
-use strict;
 use Assert;
 use Foswiki::UserMapping;
 use Foswiki::Users::BaseUserMapping;
 use Foswiki::Time;
 use Foswiki::ListIterator;
-use DBIx::SQLEngine;
-use DBD::mysql;
+use Foswiki::Contrib::DbiContrib;
 
 use Error qw( :try );
 
@@ -61,6 +55,12 @@ sub new {
     
     $this->{JoomlaOnePointFive} = $Foswiki::cfg{Plugins}{JoomlaUser}{JoomlaVersionOnePointFive};
 
+    $this->{DB} = new Foswiki::Contrib::DbiContrib( {
+            dsn => $Foswiki::cfg{Plugins}{JoomlaUser}{DBI_dsn},
+            dsn_user => $Foswiki::cfg{Plugins}{JoomlaUser}{DBI_username},
+            dsn_password => $Foswiki::cfg{Plugins}{JoomlaUser}{DBI_password}
+    } );
+
     $this->{error} = undef;
     require Digest::MD5;
 
@@ -68,7 +68,7 @@ sub new {
     return $this;
 }
 
-=begin twiki
+=begin pod
 
 ---++ ObjectMethod finish()
 Break circular references.
@@ -81,12 +81,13 @@ documentation" of the live fields in the object.
 
 sub finish {
     my $this = shift;
-    undef $this->{JoomlaDB};
+    $this->{DB}->disconnect();
+    undef $this->{DB};
     $this->SUPER::finish();
     return;
 }
 
-=begin twiki
+=begin pod
 
 ---++ ObjectMethod loginTemplateName () -> $templateFile
 
@@ -115,7 +116,7 @@ sub supportsRegistration {
     return 0;    # NO, we don't
 }
 
-=begin twiki
+=begin pod
 
 ---++ ObjectMethod handlesUser ( $cUID, $login, $wikiname) -> $boolean
 
@@ -137,7 +138,7 @@ sub handlesUser {
     return 0;
 }
 
-=begin twiki
+=begin pod
 
 ---++ ObjectMethod login2cUID ($login, $dontcheck) -> cUID
 
@@ -245,14 +246,14 @@ sub getWikiName {
     $user_number =~ s/^$this->{mapping_id}//;
     my $name;
     my $userDataset =
-      $this->dbSelect( 'select name from jos_users gwn where gwn.id = ?',
+      $this->{DB}->select( 'select name from jos_users gwn where gwn.id = ?',
         $user_number );
     if ( exists $$userDataset[0] ) {
         $name = $$userDataset[0]{name};
     }
     else {
 
-#TODO: examine having the mapper returnthe truth, and fakeing guest in the core...
+#TODO: examine having the mapper return the truth, and fakeing guest in the core...
 #throw Error::Simple(
 #   'user_id does not exist: '.$user);
         return $Foswiki::cfg{DefaultUserWikiName};
@@ -298,7 +299,7 @@ sub eachUser {
     my @list = ();
 
 #TODO: this needs to be implemented in terms of a DB iterator that only selects partial results
-    my $userDataset = $this->dbSelect('select id from jos_users');
+    my $userDataset = $this->{DB}->select('select id from jos_users');
     for my $row (@$userDataset) {
         push @list, $this->{mapping_id} . $$row{id};
     }
@@ -336,12 +337,12 @@ sub eachGroupMember {
     }
     my $groupSelectStatement = 'select '.$idRowName.' from jos_core_acl_aro_groups where name = ?';
 
-    my $groupIdDataSet = $this->dbSelect(
+    my $groupIdDataSet = $this->{DB}->select(
         $groupSelectStatement,
         $groupName );
     if ( exists $$groupIdDataSet[0] ) {
         my $group        = $$groupIdDataSet[0]{$idRowName};
-        my $groupDataset = $this->dbSelect(
+        my $groupDataset = $this->{DB}->select(
             'select aro_id from jos_core_acl_groups_aro_map where group_id = ?',
             $group
         );
@@ -355,7 +356,7 @@ sub eachGroupMember {
         for my $row (@$groupDataset) {
 
             #get rows of users in group
-            my $userDataset = $this->dbSelect(
+            my $userDataset = $this->{DB}->select(
                 $userSelectStatement,
                 $$row{aro_id} );
             my $user_id =
@@ -386,7 +387,7 @@ sub isGroup {
     if ($this->{JoomlaOnePointFive}) {
         $groupSelectStatement = 'select id from jos_core_acl_aro_groups where name = ?';
     }
-    my $groupIdDataSet = $this->dbSelect($groupSelectStatement, $user );
+    my $groupIdDataSet = $this->{DB}->select($groupSelectStatement, $user );
     if ( exists $$groupIdDataSet[0] ) {
 
         #print STDERR "$user is a GROUP\n";
@@ -508,7 +509,7 @@ sub findUserByEmail {
 
     if ($email) {
         my $dataset =
-          $this->dbSelect( 'select * from jos_users where email = ?', $email );
+          $this->{DB}->select( 'select * from jos_users where email = ?', $email );
         if ( exists $$dataset[0] ) {
             my @userList = ();
             for my $row (@$dataset) {
@@ -547,7 +548,7 @@ sub getEmails {
 
     if ($cUID) {
         my $dataset =
-          $this->dbSelect( 'select * from jos_users where id = ?', $cUID );
+          $this->{DB}->select( 'select * from jos_users where id = ?', $cUID );
         if ( exists $$dataset[0] ) {
             return ( $$dataset[0]{email} );
         }
@@ -599,7 +600,7 @@ sub findUserByWikiName {
 
     if ($wikiname) {
         my $dataset =
-          $this->dbSelect( 'select * from jos_users where name = ?',
+          $this->{DB}->select( 'select * from jos_users where name = ?',
             $wikiname );
         if ( exists $$dataset[0] ) {
             my @userList = ();
@@ -713,64 +714,6 @@ sub passwordError {
     return $this->{error};
 }
 
-###############################################################################
-#DB access methods
-
-#todo: cache DB connections
-sub getJoomlaDB {
-    my ( $this, $user ) = @_;
-    ASSERT( $this->isa('Foswiki::Users::JoomlaUserMapping') ) if DEBUG;
-    my ( $dbi_dsn, $dbi_user, $dbi_passwd ) = (
-        $Foswiki::cfg{Plugins}{JoomlaUser}{DBI_dsn},
-        $Foswiki::cfg{Plugins}{JoomlaUser}{DBI_username},
-        $Foswiki::cfg{Plugins}{JoomlaUser}{DBI_password}
-    );
-
-    #print STDERR "DBIx::SQLEngine->new( $dbi_dsn, $dbi_user, ...)";
-
-    unless ( defined( $this->{JoomlaDB} ) ) {
-
-#        Foswiki::Func::writeWarning("DBIx::SQLEngine->new( $dbi_dsn, $dbi_user, ...)");
-        try {
-            $this->{JoomlaDB} =
-              DBIx::SQLEngine->new( $dbi_dsn, $dbi_user, $dbi_passwd );
-        }
-        catch Error::Simple with {
-            $this->{error} = $!;
-            Foswiki::Func::writeWarning(
-                "ERROR: DBIx::SQLEngine->new( $dbi_dsn, $dbi_user, ...) : $!");
-            #die 'MYSQL login error (' . $dbi_dsn . ', ' . $dbi_user . ') ' . $!;
-        };
-    }
-    return $this->{JoomlaDB};
-}
-
-#returns an ref to an array dataset of rows
-#dbSelect(query, @list of params to query)
-sub dbSelect {
-    my $this  = shift;
-    my @query = @_;
-    my $dataset;
-
-    #print STDERR "fetch_select( @query )";
-
-    #    Foswiki::Func::writeWarning("fetch_select( @query )");
-    if (@query) {
-        try {
-            my $db = $this->getJoomlaDB();
-            $dataset = $db->fetch_select( sql => [@query] );
-        }
-        catch Error::Simple with {
-            $this->{error} = $!;
-            print STDERR "            ERROR: fetch_select(@query) : $!";
-            Foswiki::Func::writeWarning("ERROR: fetch_select(@query) : $!");
-        };
-    }
-
-    #    Foswiki::Func::writeWarning("fetch_select => ".@$dataset);
-    return $dataset;
-}
-
 ##############################################
 #internal methods
 # Convert a login name to the corresponding canonical user name. The
@@ -789,7 +732,7 @@ sub login2canonical {
         # use bytes to ignore character encoding
         #$login =~ s/([^a-zA-Z0-9])/'_'.sprintf('%02d', ord($1))/ge;
         my $userDataset =
-          $this->dbSelect( 'select * from jos_users where username = ?',
+          $this->{DB}->select( 'select * from jos_users where username = ?',
             $login );
         if ( exists $$userDataset[0] ) {
             $canonical_id = $$userDataset[0]{id};
@@ -818,7 +761,7 @@ sub canonical2login {
 
     my $login = $Foswiki::cfg{DefaultUserLogin};
     my $userDataset =
-      $this->dbSelect( 'select username from jos_users c2l where c2l.id = ?',
+      $this->{DB}->select( 'select username from jos_users c2l where c2l.id = ?',
         $user );
     if ( exists $$userDataset[0] ) {
         $login = $$userDataset[0]{username};
@@ -860,7 +803,7 @@ sub _getListOfGroups {
     unless ( $this->{groupsList} ) {
         $this->{groupsList} = [];
         my $dataset =
-          $this->dbSelect('select name from jos_core_acl_aro_groups');
+          $this->{DB}->select('select name from jos_core_acl_aro_groups');
         for my $row (@$dataset) {
             my $groupID = $$row{name};
             push @{ $this->{groupsList} }, $groupID;
@@ -898,7 +841,7 @@ sub fetchPass {
 
     if ($user) {
         my $dataset =
-          $this->dbSelect( 'select * from jos_users where username = ?',
+          $this->{DB}->select( 'select * from jos_users where username = ?',
             $user );
 
       #Foswiki::Func::writeWarning("$@$dataset");
