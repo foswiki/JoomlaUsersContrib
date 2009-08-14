@@ -99,7 +99,7 @@ Default is "login"
 =cut
 
 sub loginTemplateName {
-    return 'login.joomla';
+    return 'loginjoomla';
 }
 
 =pod

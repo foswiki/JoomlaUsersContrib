@@ -6,5 +6,5 @@ lib/Foswiki/Contrib/JoomlaUsersContrib/Config.spec
 pub/System/JoomlaUsersContrib/Joomla.png
 pub/System/JoomlaUsersContrib/wikiring.png
 pub/System/JoomlaUsersContrib/JoomlaIcon.png
-templates/login.joomla.tmpl
+templates/loginjoomla.tmpl
 
