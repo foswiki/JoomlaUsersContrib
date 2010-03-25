@@ -24,7 +24,8 @@ login == username column
 =cut
 
 package Foswiki::Users::JoomlaUserMapping;
-use base 'Foswiki::UserMapping';
+use Foswiki::UserMapping;
+our @ISA = qw( Foswiki::UserMapping );
 
 use strict;
 use Assert;
