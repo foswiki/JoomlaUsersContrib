@@ -1,6 +1,7 @@
 package JoomlaUsersContribSuite;
 
-use base qw(Test::Unit::TestSuite);
+use Test::Unit::TestSuite;
+our @ISA = qw( Test::Unit::TestSuite );
 
 sub name { 'JoomlaUsersContribSuite' };
 
