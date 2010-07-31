@@ -1,6 +1,6 @@
 # Module of Foswiki Collaboration Platform, http://Foswiki.org/
 #
-# Copyright (C) 2006-9 Sven Dowideit, SvenDowideit@fosiki.com
+# Copyright (C) 2006-2010 Sven Dowideit, SvenDowideit@fosiki.com
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -30,6 +30,7 @@ package Foswiki::LoginManager::JoomlaLogin;
 use strict;
 use Assert;
 use Foswiki::LoginManager::TemplateLogin;
+use Foswiki::Users::JoomlaUserMapping;
 
 @Foswiki::LoginManager::JoomlaLogin::ISA = ('Foswiki::LoginManager::TemplateLogin');
 
@@ -51,12 +52,14 @@ add Joomla cookie to the session management
 
 sub loadSession {
     my $this  = shift;
-    my $twiki = $this->{twiki};
-    my $query = $twiki->{cgiQuery};
+    my $session = $this->{session};
+    my $query = $session->{cgiQuery};
 
     ASSERT( $this->isa('Foswiki::LoginManager::JoomlaLogin') ) if DEBUG;
 
-    my $authUser = '';
+    my $authUser = $this->SUPER::loadSession();
+    return $authUser if ($authUser ne $Foswiki::cfg{DefaultUserLogin} or
+                        ( $session->{request} and $session->{request}->param('logout')));
 
     # see if there is a joomla username and password cookie
     #TODO: think i should check the password is right too.. otherwise ignore it
@@ -72,10 +75,9 @@ sub loadSession {
             next if (length($key) != 32);
             next if (length($cookies{$key}->value) != 32);
             
-            print STDERR "--- $key ".$cookies{$key}->value."\n";
+            #print STDERR "--- $key ".$cookies{$key}->value."\n";
             
-            #TODO: boooooom
-            my $username = $twiki->{users}->{mapping}->joomlaSessionUserId($cookies{$key}->value);
+            my $username = Foswiki::Users::JoomlaUserMapping::joomlaSessionUserId($cookies{$key}->value);
             if (defined($username)) {
                 $authUser = $username;
                 $this->userLoggedIn($authUser);
@@ -86,15 +88,15 @@ sub loadSession {
         #the 1.0 joomla cookie
         my $id       = $cookies{'usercookie[username]'}->value;
         my $password = $cookies{'usercookie[password]'}->value;
-        my $user     = $twiki->{users}->getCanonicalUserID( $id, undef, 1 );
+        my $user     = $session->{users}->getCanonicalUserID( $id, undef, 1 );
 
         #print STDERR "$id, $password, $user";
-        my $passwordHandler = $twiki->{users}->{passwords};
+        my $passwordHandler = $session->{users}->{passwords};
 
         #return $passwordHandler->checkPassword($this->{login}, $password);
 
         if ( defined($user)
-            && $twiki->{users}->checkPassword( $user->login(), $password, 1 ) )
+            && $session->{users}->checkPassword( $user->login(), $password, 1 ) )
         {
             $authUser = $id;
         }
@@ -105,9 +107,10 @@ sub loadSession {
 
         $this->userLoggedIn($authUser);
     }
-    else {
-        $authUser = $this->SUPER::loadSession();
-    }
+    
+#    if ($authUser eq '') {
+#        $authUser = $this->SUPER::loadSession();
+#    }
     return $authUser;
 }
 
