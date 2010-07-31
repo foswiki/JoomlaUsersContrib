@@ -876,4 +876,32 @@ sub deleteUser {
     return 1;
 }
 
+
+=pod
+
+---++ ObjectMethod joomlaSessionUserId ($session_id) -> loginname
+
+called by the joomlaLogin module to try to detect that the user has logged into joomla
+
+=cut
+
+sub joomlaSessionUserId {
+    my ( $this, $session_id ) = @_;
+    
+    ASSERT($this->{JoomlaOnePointFive}) if DEBUG;
+
+    my $sessionSelectStatement = 'select username from jos_session where session_id = ?';
+    my $userIdDataSet = $this->{DB}->select($sessionSelectStatement, $session_id );
+    if ( exists $$userIdDataSet[0] ) {
+
+        print STDERR "$session_id is a user (".$$userIdDataSet[0]{username}.")\n";
+        return $$userIdDataSet[0]{username};
+    }
+
+    print STDERR "$session_id is __not__ a session\n";
+
+    #not our session
+    return undef;
+}
+
 1;

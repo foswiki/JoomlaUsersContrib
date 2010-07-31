@@ -61,7 +61,29 @@ sub loadSession {
     # see if there is a joomla username and password cookie
     #TODO: think i should check the password is right too.. otherwise ignore it
     my %cookies = fetch CGI::Cookie;
-    if ( defined( $cookies{'usercookie[username]'} ) ) {
+    if ( $Foswiki::cfg{Plugins}{JoomlaUser}{JoomlaVersionOnePointFive} ) {
+        #1.5 uses some magic token as key (I've not spent time to reverse engineer it
+        #but the value of that key is the session_id in the database.
+        foreach my $key (keys(%cookies)) {
+
+            #print STDERR "--- $key (".length($key).")".$cookies{$key}->value."(".length($cookies{$key}->value).")\n";
+
+
+            next if (length($key) != 32);
+            next if (length($cookies{$key}->value) != 32);
+            
+            print STDERR "--- $key ".$cookies{$key}->value."\n";
+            
+            #TODO: boooooom
+            my $username = $twiki->{users}->{mapping}->joomlaSessionUserId($cookies{$key}->value);
+            if (defined($username)) {
+                $authUser = $username;
+                $this->userLoggedIn($authUser);
+                last;
+            }
+        }
+    } elsif ( defined( $cookies{'usercookie[username]'} ) ) {
+        #the 1.0 joomla cookie
         my $id       = $cookies{'usercookie[username]'}->value;
         my $password = $cookies{'usercookie[password]'}->value;
         my $user     = $twiki->{users}->getCanonicalUserID( $id, undef, 1 );
