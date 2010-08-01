@@ -57,9 +57,7 @@ sub loadSession {
 
     ASSERT( $this->isa('Foswiki::LoginManager::JoomlaLogin') ) if DEBUG;
 
-    my $authUser = $this->SUPER::loadSession();
-    return $authUser if ($authUser ne $Foswiki::cfg{DefaultUserLogin} or
-                        ( $session->{request} and $session->{request}->param('logout')));
+    my $authUser = '';
 
     # see if there is a joomla username and password cookie
     #TODO: think i should check the password is right too.. otherwise ignore it
@@ -81,6 +79,9 @@ sub loadSession {
             if (defined($username)) {
                 $authUser = $username;
                 $this->userLoggedIn($authUser);
+                # Can't logout - we're using the cookie from joomla
+                Foswiki::registerTagHandler( 'LOGOUT', sub { return '' } );
+
                 last;
             }
         }
@@ -108,9 +109,9 @@ sub loadSession {
         $this->userLoggedIn($authUser);
     }
     
-#    if ($authUser eq '') {
-#        $authUser = $this->SUPER::loadSession();
-#    }
+    if ($authUser eq '') {
+        $authUser = $this->SUPER::loadSession();
+    }
     return $authUser;
 }
 
