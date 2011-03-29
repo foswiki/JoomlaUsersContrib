@@ -71,7 +71,8 @@ sub loadSession {
 
 
             next if (length($key) != 32);
-            next if (length($cookies{$key}->value) != 32);
+            #can't test for value length - i've now come across length 32 and length 26 in the wild
+            #next if (length($cookies{$key}->value) != 32);
             
             #print STDERR "--- $key ".$cookies{$key}->value."\n";
             

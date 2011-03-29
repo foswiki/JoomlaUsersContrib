@@ -16,7 +16,7 @@
 
 package Foswiki::Contrib::JoomlaUsersContrib;
 use vars qw( $VERSION $DB );
-$VERSION = '$Rev$';
+$VERSION = '2.0.1';
 
 package Foswiki::Contrib::JoomlaUsersContrib;
 use Foswiki::Contrib::DbiContrib;
