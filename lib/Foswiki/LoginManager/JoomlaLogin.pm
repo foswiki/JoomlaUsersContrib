@@ -116,4 +116,22 @@ sub loadSession {
     return $authUser;
 }
 
+=begin TML
+
+---++ ObjectMethod loginUrl () -> $loginUrl
+
+over-ride the login url
+
+=cut
+
+sub loginUrl {
+    my $this    = shift;
+    
+    if ($Foswiki::cfg{Plugins}{JoomlaUser}{JoomlaAuthOnly}) {
+        return $Foswiki::cfg{Plugins}{JoomlaUser}{JoomlaAuthURL};
+    } else {
+        return $this->SUPER::loginUrl();
+    }
+}
+
 1;

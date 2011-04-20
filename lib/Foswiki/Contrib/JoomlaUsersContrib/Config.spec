@@ -22,3 +22,13 @@ $Foswiki::cfg{Plugins}{JoomlaUser}{DBI_username} = 'mysqlpassword';
 # **PASSWORD**
 # The password to connect to the Joomla Database.
 $Foswiki::cfg{Plugins}{JoomlaUser}{DBI_password} = 'pwd';
+
+# **BOOLEAN**
+# Over-ride Foswiki authentication using _only_ the Joomla sessions
+# If there is no Joomla Session cookie, Foswiki will use the Guest user.
+# NOTE: you will need to specify a Joomla Login UI URL for Foswiki to redirect to to authenticate
+$Foswiki::cfg{Plugins}{JoomlaUser}{JoomlaAuthOnly} = $FALSE;
+
+# **STRING 150**
+# Joomla Login UI URL for Foswiki to redirect to to authenticate - used if =JoomlaAuthOnly= is set to true
+$Foswiki::cfg{Plugins}{JoomlaUser}{JoomlaAuthURL} = '';
