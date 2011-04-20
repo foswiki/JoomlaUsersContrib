@@ -31,6 +31,7 @@ use strict;
 use Assert;
 use Foswiki::LoginManager::TemplateLogin;
 use Foswiki::Users::JoomlaUserMapping;
+use CGI::Cookie;
 
 @Foswiki::LoginManager::JoomlaLogin::ISA = ('Foswiki::LoginManager::TemplateLogin');
 
@@ -54,6 +55,9 @@ sub loadSession {
     my $this  = shift;
     my $session = $this->{session};
     my $query = $session->{cgiQuery};
+    
+    #command_line doesn't have CGI::Cookies
+    return this->SUPER::loadSession() if ($session->inContext('command_line'));
 
     ASSERT( $this->isa('Foswiki::LoginManager::JoomlaLogin') ) if DEBUG;
 
