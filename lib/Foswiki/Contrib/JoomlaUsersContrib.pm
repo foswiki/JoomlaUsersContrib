@@ -41,14 +41,15 @@ retrives the joomla DbiContrib obj
 
 =cut
 
-
 sub getDB {
 
-    $DB = new Foswiki::Contrib::DbiContrib( {
-            dsn => $Foswiki::cfg{Plugins}{JoomlaUser}{DBI_dsn},
-            dsn_user => $Foswiki::cfg{Plugins}{JoomlaUser}{DBI_username},
+    $DB = new Foswiki::Contrib::DbiContrib(
+        {
+            dsn          => $Foswiki::cfg{Plugins}{JoomlaUser}{DBI_dsn},
+            dsn_user     => $Foswiki::cfg{Plugins}{JoomlaUser}{DBI_username},
             dsn_password => $Foswiki::cfg{Plugins}{JoomlaUser}{DBI_password}
-    } );
+        }
+    );
 
     return $DB;
 }
@@ -61,10 +62,10 @@ close the joomla DbiContrib object
 =cut
 
 sub finish {
-    if (defined($DB)) {
+    if ( defined($DB) ) {
         $DB->disconnect();
         undef $DB;
-    }    
+    }
     return;
 }
 

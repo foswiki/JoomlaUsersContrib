@@ -33,7 +33,8 @@ use Foswiki::LoginManager::TemplateLogin;
 use Foswiki::Users::JoomlaUserMapping;
 use CGI::Cookie;
 
-@Foswiki::LoginManager::JoomlaLogin::ISA = ('Foswiki::LoginManager::TemplateLogin');
+@Foswiki::LoginManager::JoomlaLogin::ISA =
+  ('Foswiki::LoginManager::TemplateLogin');
 
 sub new {
     my ( $class, $session ) = @_;
@@ -52,12 +53,13 @@ add Joomla cookie to the session management
 =cut
 
 sub loadSession {
-    my $this  = shift;
+    my $this    = shift;
     my $session = $this->{session};
-    my $query = $session->{cgiQuery};
-    
+    my $query   = $session->{cgiQuery};
+
     #command_line doesn't have CGI::Cookies
-    return this->SUPER::loadSession() if ($session->inContext('command_line'));
+    return this->SUPER::loadSession()
+      if ( $session->inContext('command_line') );
 
     ASSERT( $this->isa('Foswiki::LoginManager::JoomlaLogin') ) if DEBUG;
 
@@ -67,30 +69,36 @@ sub loadSession {
     #TODO: think i should check the password is right too.. otherwise ignore it
     my %cookies = fetch CGI::Cookie;
     if ( $Foswiki::cfg{Plugins}{JoomlaUser}{JoomlaVersionOnePointFive} ) {
-        #1.5 uses some magic token as key (I've not spent time to reverse engineer it
-        #but the value of that key is the session_id in the database.
-        foreach my $key (keys(%cookies)) {
 
-            #print STDERR "--- $key (".length($key).")".$cookies{$key}->value."(".length($cookies{$key}->value).")\n";
+   #1.5 uses some magic token as key (I've not spent time to reverse engineer it
+   #but the value of that key is the session_id in the database.
+        foreach my $key ( keys(%cookies) ) {
 
+#print STDERR "--- $key (".length($key).")".$cookies{$key}->value."(".length($cookies{$key}->value).")\n";
 
-            next if (length($key) != 32);
-            #can't test for value length - i've now come across length 32 and length 26 in the wild
-            #next if (length($cookies{$key}->value) != 32);
-            
+            next if ( length($key) != 32 );
+
+#can't test for value length - i've now come across length 32 and length 26 in the wild
+#next if (length($cookies{$key}->value) != 32);
+
             #print STDERR "--- $key ".$cookies{$key}->value."\n";
-            
-            my $username = Foswiki::Users::JoomlaUserMapping::joomlaSessionUserId($cookies{$key}->value);
-            if (defined($username)) {
+
+            my $username =
+              Foswiki::Users::JoomlaUserMapping::joomlaSessionUserId(
+                $cookies{$key}->value );
+            if ( defined($username) ) {
                 $authUser = $username;
                 $this->userLoggedIn($authUser);
+
                 # Can't logout - we're using the cookie from joomla
                 Foswiki::registerTagHandler( 'LOGOUT', sub { return '' } );
 
                 last;
             }
         }
-    } elsif ( defined( $cookies{'usercookie[username]'} ) ) {
+    }
+    elsif ( defined( $cookies{'usercookie[username]'} ) ) {
+
         #the 1.0 joomla cookie
         my $id       = $cookies{'usercookie[username]'}->value;
         my $password = $cookies{'usercookie[password]'}->value;
@@ -102,7 +110,8 @@ sub loadSession {
         #return $passwordHandler->checkPassword($this->{login}, $password);
 
         if ( defined($user)
-            && $session->{users}->checkPassword( $user->login(), $password, 1 ) )
+            && $session->{users}->checkPassword( $user->login(), $password, 1 )
+          )
         {
             $authUser = $id;
         }
@@ -113,8 +122,8 @@ sub loadSession {
 
         $this->userLoggedIn($authUser);
     }
-    
-    if ($authUser eq '') {
+
+    if ( $authUser eq '' ) {
         $authUser = $this->SUPER::loadSession();
     }
     return $authUser;
@@ -129,11 +138,12 @@ over-ride the login url
 =cut
 
 sub loginUrl {
-    my $this    = shift;
-    
-    if ($Foswiki::cfg{Plugins}{JoomlaUser}{JoomlaAuthOnly}) {
+    my $this = shift;
+
+    if ( $Foswiki::cfg{Plugins}{JoomlaUser}{JoomlaAuthOnly} ) {
         return $Foswiki::cfg{Plugins}{JoomlaUser}{JoomlaAuthURL};
-    } else {
+    }
+    else {
         return $this->SUPER::loginUrl();
     }
 }

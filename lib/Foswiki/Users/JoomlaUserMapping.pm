@@ -53,8 +53,9 @@ sub new {
     my $this =
       bless( $class->SUPER::new( $session, 'JoomlaUserMapping_' ), $class );
     $this->{mapping_id} = 'JoomlaUserMapping_';
-    
-    $this->{JoomlaOnePointFive} = $Foswiki::cfg{Plugins}{JoomlaUser}{JoomlaVersionOnePointFive};
+
+    $this->{JoomlaOnePointFive} =
+      $Foswiki::cfg{Plugins}{JoomlaUser}{JoomlaVersionOnePointFive};
 
     $this->{error} = undef;
     require Digest::MD5;
@@ -199,6 +200,7 @@ Throws an Error::Simple if user adding is not supported (the default).
 =cut
 
 sub addUser {
+
     #my ( $this, $login, $wikiname ) = @_;
 
     throw Error::Simple('JoomlaUserMapping does not allow creation of users ');
@@ -240,7 +242,8 @@ sub getWikiName {
     $user_number =~ s/^$this->{mapping_id}//;
     my $name;
     my $userDataset =
-      Foswiki::Contrib::JoomlaUsersContrib::getDB()->select( 'select name from jos_users gwn where gwn.id = ?',
+      Foswiki::Contrib::JoomlaUsersContrib::getDB()
+      ->select( 'select name from jos_users gwn where gwn.id = ?',
         $user_number );
     if ( exists $$userDataset[0] ) {
         $name = $$userDataset[0]{name};
@@ -273,7 +276,7 @@ Subclasses *must* implement this method.
 
 sub userExists {
     my ( $this, $cUID ) = @_;
-    return ($this->canonical2login($cUID) ne $Foswiki::cfg{DefaultUserLogin});
+    return ( $this->canonical2login($cUID) ne $Foswiki::cfg{DefaultUserLogin} );
 }
 
 =pod
@@ -293,7 +296,8 @@ sub eachUser {
     my @list = ();
 
 #TODO: this needs to be implemented in terms of a DB iterator that only selects partial results
-    my $userDataset = Foswiki::Contrib::JoomlaUsersContrib::getDB()->select('select id from jos_users');
+    my $userDataset = Foswiki::Contrib::JoomlaUsersContrib::getDB()
+      ->select('select id from jos_users');
     for my $row (@$userDataset) {
         push @list, $this->{mapping_id} . $$row{id};
     }
@@ -326,33 +330,35 @@ sub eachGroupMember {
 #return [] if ($groupName =~ /Registered/);    #LIMIT it cos most users are resistered
 
     my $idRowName = 'group_id';
-    if ($this->{JoomlaOnePointFive}) {
+    if ( $this->{JoomlaOnePointFive} ) {
         $idRowName = 'id';
     }
-    my $groupSelectStatement = 'select '.$idRowName.' from jos_core_acl_aro_groups where name = ?';
+    my $groupSelectStatement =
+      'select ' . $idRowName . ' from jos_core_acl_aro_groups where name = ?';
 
-    my $groupIdDataSet = Foswiki::Contrib::JoomlaUsersContrib::getDB()->select(
-        $groupSelectStatement,
-        $groupName );
+    my $groupIdDataSet = Foswiki::Contrib::JoomlaUsersContrib::getDB()
+      ->select( $groupSelectStatement, $groupName );
     if ( exists $$groupIdDataSet[0] ) {
-        my $group        = $$groupIdDataSet[0]{$idRowName};
-        my $groupDataset = Foswiki::Contrib::JoomlaUsersContrib::getDB()->select(
+        my $group = $$groupIdDataSet[0]{$idRowName};
+        my $groupDataset =
+          Foswiki::Contrib::JoomlaUsersContrib::getDB()->select(
             'select aro_id from jos_core_acl_groups_aro_map where group_id = ?',
             $group
-        );
+          );
 
-        my $userSelectStatement = 'select value from jos_core_acl_aro where aro_id = ?';
-        if ($this->{JoomlaOnePointFive}) {
-            $userSelectStatement = 'select value from jos_core_acl_aro where id = ?';
+        my $userSelectStatement =
+          'select value from jos_core_acl_aro where aro_id = ?';
+        if ( $this->{JoomlaOnePointFive} ) {
+            $userSelectStatement =
+              'select value from jos_core_acl_aro where id = ?';
         }
 
         #TODO: re-write with join & map
         for my $row (@$groupDataset) {
 
             #get rows of users in group
-            my $userDataset = Foswiki::Contrib::JoomlaUsersContrib::getDB()->select(
-                $userSelectStatement,
-                $$row{aro_id} );
+            my $userDataset = Foswiki::Contrib::JoomlaUsersContrib::getDB()
+              ->select( $userSelectStatement, $$row{aro_id} );
             my $user_id =
               $this->{mapping_id} . $$userDataset[0]{value};    # user_id
             push @{$members}, $user_id;
@@ -377,11 +383,14 @@ Subclasses *must* implement this method.
 sub isGroup {
     my ( $this, $user ) = @_;
 
-    my $groupSelectStatement = 'select group_id from jos_core_acl_aro_groups where name = ?';
-    if ($this->{JoomlaOnePointFive}) {
-        $groupSelectStatement = 'select id from jos_core_acl_aro_groups where name = ?';
+    my $groupSelectStatement =
+      'select group_id from jos_core_acl_aro_groups where name = ?';
+    if ( $this->{JoomlaOnePointFive} ) {
+        $groupSelectStatement =
+          'select id from jos_core_acl_aro_groups where name = ?';
     }
-    my $groupIdDataSet = Foswiki::Contrib::JoomlaUsersContrib::getDB()->select($groupSelectStatement, $user );
+    my $groupIdDataSet = Foswiki::Contrib::JoomlaUsersContrib::getDB()
+      ->select( $groupSelectStatement, $user );
     if ( exists $$groupIdDataSet[0] ) {
 
         #print STDERR "$user is a GROUP\n";
@@ -502,8 +511,8 @@ sub findUserByEmail {
     my $email = shift;
 
     if ($email) {
-        my $dataset =
-          Foswiki::Contrib::JoomlaUsersContrib::getDB()->select( 'select * from jos_users where email = ?', $email );
+        my $dataset = Foswiki::Contrib::JoomlaUsersContrib::getDB()
+          ->select( 'select * from jos_users where email = ?', $email );
         if ( exists $$dataset[0] ) {
             my @userList = ();
             for my $row (@$dataset) {
@@ -541,8 +550,8 @@ sub getEmails {
     return unless ( $cUID =~ /^\d+$/ );
 
     if ($cUID) {
-        my $dataset =
-          Foswiki::Contrib::JoomlaUsersContrib::getDB()->select( 'select * from jos_users where id = ?', $cUID );
+        my $dataset = Foswiki::Contrib::JoomlaUsersContrib::getDB()
+          ->select( 'select * from jos_users where id = ?', $cUID );
         if ( exists $$dataset[0] ) {
             return ( $$dataset[0]{email} );
         }
@@ -593,9 +602,8 @@ sub findUserByWikiName {
     my $wikiname = shift;
 
     if ($wikiname) {
-        my $dataset =
-          Foswiki::Contrib::JoomlaUsersContrib::getDB()->select( 'select * from jos_users where name = ?',
-            $wikiname );
+        my $dataset = Foswiki::Contrib::JoomlaUsersContrib::getDB()
+          ->select( 'select * from jos_users where name = ?', $wikiname );
         if ( exists $$dataset[0] ) {
             my @userList = ();
             for my $row (@$dataset) {
@@ -725,9 +733,8 @@ sub login2canonical {
 
         # use bytes to ignore character encoding
         #$login =~ s/([^a-zA-Z0-9])/'_'.sprintf('%02d', ord($1))/ge;
-        my $userDataset =
-          Foswiki::Contrib::JoomlaUsersContrib::getDB()->select( 'select * from jos_users where username = ?',
-            $login );
+        my $userDataset = Foswiki::Contrib::JoomlaUsersContrib::getDB()
+          ->select( 'select * from jos_users where username = ?', $login );
         if ( exists $$userDataset[0] ) {
             $canonical_id = $$userDataset[0]{id};
 
@@ -753,10 +760,9 @@ sub canonical2login {
     return unless ( $user =~ /^\d+$/ );
     return $Foswiki::cfg{DefaultUserLogin} if ( $user == -1 );
 
-    my $login = $Foswiki::cfg{DefaultUserLogin};
-    my $userDataset =
-      Foswiki::Contrib::JoomlaUsersContrib::getDB()->select( 'select username from jos_users c2l where c2l.id = ?',
-        $user );
+    my $login       = $Foswiki::cfg{DefaultUserLogin};
+    my $userDataset = Foswiki::Contrib::JoomlaUsersContrib::getDB()
+      ->select( 'select username from jos_users c2l where c2l.id = ?', $user );
     if ( exists $$userDataset[0] ) {
         $login = $$userDataset[0]{username};
     }
@@ -796,8 +802,8 @@ sub _getListOfGroups {
 
     unless ( $this->{groupsList} ) {
         $this->{groupsList} = [];
-        my $dataset =
-          Foswiki::Contrib::JoomlaUsersContrib::getDB()->select('select name from jos_core_acl_aro_groups');
+        my $dataset = Foswiki::Contrib::JoomlaUsersContrib::getDB()
+          ->select('select name from jos_core_acl_aro_groups');
         for my $row (@$dataset) {
             my $groupID = $$row{name};
             push @{ $this->{groupsList} }, $groupID;
@@ -831,12 +837,12 @@ sub lookupLoginName {
 sub fetchPass {
     my ( $this, $user ) = @_;
     ASSERT( $this->isa('Foswiki::Users::JoomlaUserMapping') ) if DEBUG;
+
     #print STDERR "fetchPass($user)\n";
 
     if ($user) {
-        my $dataset =
-          Foswiki::Contrib::JoomlaUsersContrib::getDB()->select( 'select * from jos_users where username = ?',
-            $user );
+        my $dataset = Foswiki::Contrib::JoomlaUsersContrib::getDB()
+          ->select( 'select * from jos_users where username = ?', $user );
 
       #Foswiki::Func::writeWarning("$@$dataset");
       #print STDERR "fetchpass got - ".join(', ', keys(%{$$dataset[0]}))."\n";
@@ -869,7 +875,6 @@ sub deleteUser {
     return 1;
 }
 
-
 =pod
 
 ---++ ClassMethod joomlaSessionUserId ($session_id) -> loginname
@@ -879,15 +884,18 @@ called by the joomlaLogin module to try to detect that the user has logged into 
 =cut
 
 sub joomlaSessionUserId {
-    my ( $session_id ) = @_;
-    
-    ASSERT($Foswiki::cfg{Plugins}{JoomlaUser}{JoomlaVersionOnePointFive}) if DEBUG;
+    my ($session_id) = @_;
 
-    my $sessionSelectStatement = 'select username from jos_session where session_id = ?';
-    my $userIdDataSet = Foswiki::Contrib::JoomlaUsersContrib::getDB()->select($sessionSelectStatement, $session_id );
+    ASSERT( $Foswiki::cfg{Plugins}{JoomlaUser}{JoomlaVersionOnePointFive} )
+      if DEBUG;
+
+    my $sessionSelectStatement =
+      'select username from jos_session where session_id = ?';
+    my $userIdDataSet = Foswiki::Contrib::JoomlaUsersContrib::getDB()
+      ->select( $sessionSelectStatement, $session_id );
     if ( exists $$userIdDataSet[0] ) {
 
-        #print STDERR "$session_id is a user (".$$userIdDataSet[0]{username}.")\n";
+     #print STDERR "$session_id is a user (".$$userIdDataSet[0]{username}.")\n";
         return $$userIdDataSet[0]{username};
     }
 
