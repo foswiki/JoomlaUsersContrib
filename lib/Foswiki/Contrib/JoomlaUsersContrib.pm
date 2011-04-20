@@ -1,6 +1,6 @@
 # Module of Foswiki Collaboration Platform, http://Foswiki.org/
 #
-# Copyright (C) 2006-2010 Sven Dowideit, SvenDowideit@fosiki.com
+# Copyright (C) 2006-2011 Sven Dowideit, SvenDowideit@fosiki.com
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -16,7 +16,7 @@
 
 package Foswiki::Contrib::JoomlaUsersContrib;
 use vars qw( $VERSION $DB );
-$VERSION = '2.0.1';
+$VERSION = '2.0.2';
 
 package Foswiki::Contrib::JoomlaUsersContrib;
 use Foswiki::Contrib::DbiContrib;
